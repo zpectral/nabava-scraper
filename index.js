@@ -14,7 +14,7 @@ const nabavaUrl= "https://www.nabava.net";
 const outputPath = "C:/Users/zpectral/Documents/dev/nabava-popusti/data/";
 
 //category name has to be the same as on nabava.net
-const dataCategories = ["monitori", "misevi", "procesori", "graficke-kartice", "gaming-slusalice", "tipkovnice", "sisaci-i-trimeri"];
+const dataCategories = ["monitori", "misevi", "procesori", "graficke-kartice", "gaming-slusalice", "tipkovnice", "ssd-disk", "cvrsti-diskovi",  "sisaci-i-trimeri"];
 var dataCollection = {};
 
 //variables for scraper JSON files
