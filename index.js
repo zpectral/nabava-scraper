@@ -14,7 +14,7 @@ const nabavaUrl= "https://www.nabava.net";
 const outputPath = "C:/Users/zpectral/Documents/dev/nabava-popusti/data/";
 
 //category name has to be the same as on nabava.net
-const dataCategories = ["monitori", "misevi", "procesori", "graficke-kartice", "gaming-slusalice", "tipkovnice", "ssd-disk", "cvrsti-diskovi",  "sisaci-i-trimeri"];
+const dataCategories = ["monitori", "misevi", "procesori", "graficke-kartice", "gaming-slusalice", "tipkovnice", "ssd-disk", "cvrsti-diskovi", "sisaci-i-trimeri"];
 var dataCollection = {};
 
 //variables for scraper JSON files
@@ -175,7 +175,9 @@ async function processArray(arr) {
         page = 0;
         var endItemTime = new Date();
         cl(`All pages from ${arr[i]} completed in ` + (endItemTime.getTime() - startItemTime.getTime()) + `ms \n ${updatedItemsCount} updated items \n ${newItemsCount} new items added \n ${basePriceUpdated} base prices changed`);
-        updatedItemsCount, newItemsCount = 0;
+        updatedItemsCount = 0, 
+        newItemsCount = 0,
+        basePriceUpdated = 0;
         formatForTabulator(dataCollection[arr[i]], arr[i])
     }
     const endTime = new Date();
