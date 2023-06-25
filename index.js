@@ -1,11 +1,13 @@
 // Set options as a parameter, environment variable, or rc file.
 // eslint-disable-next-line no-global-assign
-require = require("esm")(module/* , options */)
+//require = require("esm")(module/* , options */)
+import esm from 'esm';
 
-const axios = require('axios');
-const cheerio = require('cheerio');
-const fs = require('fs');
-const fsp = require('fs').promises;
+import get from 'axios';
+import { load } from 'cheerio';
+import fs from 'fs';
+import { promises as fsp } from 'fs';
+import { createWriteStream } from 'fs';
 
 
 const nabavaUrl= "https://www.nabava.net";
@@ -14,14 +16,16 @@ const nabavaUrl= "https://www.nabava.net";
 const outputPath = "C:/Users/zpectral/Documents/dev/nabava-popusti/data/";
 
 //category name has to be the same as on nabava.net
-const dataCategories = ["monitori", "misevi", "procesori", "graficke-kartice", "gaming-slusalice", "tipkovnice", "ssd-disk", "cvrsti-diskovi", "sisaci-i-trimeri"];
+// const dataCategories = ["monitori", "misevi", "procesori", "graficke-kartice", "gaming-slusalice", "tipkovnice", "ssd-disk", "cvrsti-diskovi", "sisaci-i-trimeri"];
+const dataCategories = ["procesori", "gaming-misevi", "graficke-kartice", "gaming-slusalice", "tipkovnice"];
+// const dataCategories = ["procesori"];
 var dataCollection = {};
 
 //variables for scraper JSON files
 const dataCollectionPath = "C:/Users/zpectral/Documents/dev/nabava-scraper/";
 
 //cl to file
-const logFile = fs.createWriteStream("scraper.log", {flags:'a'});
+const logFile = createWriteStream("scraper.log", {flags:'a'});
 function cl(txt) {
     logFile.write(txt + '\n');
 }
@@ -53,7 +57,7 @@ async function loadDataCollection() {
         cl('Data loading failed.\n')
     })
     .finally(function() {
-        processArray(dataCategories);
+        processCategories(dataCategories);
     })
     
 }
@@ -62,59 +66,75 @@ loadDataCollection();
 
 //keep track
 //var pageNum = 1;
+var morePages = false;
 var updatedItemsCount = 0;
 var newItemsCount = 0;
 var basePriceUpdated = 0;
 
-// async axios
+
+// const params = "?tpkp=1&kPostavke.pregledSortKategorije=2&kPostavke.pregledBrojProizvoda=300"
+let params = new URLSearchParams();
+params.append('s', 1);
+params.append('tpkp', 1);
+params.append('kPostavke.pregledSortKategorije', 2);
+params.append('kPostavke.pregledBrojProizvoda', 300);
+params.append('r', 1);
+params.append('r', 2);
+params.append('r', 3);
+
 async function getPage(url, page) {
-    const params = "?tpkp=1&kPostavke.pregledSortKategorije=0&kPostavke.pregledBrojProizvoda=300"
+    params.set('s', page)
     try {
-        const response = await axios.get(url+params, {
-            params: {
-                s: page,
-            },
+        const response = await get(url, {
+            params: params,
         })
-        //cl("success");
+        // cl("success");
         return response;
     } catch (error) {
         console.error(error);
     }
 }
-// process response with cheerio and work on the obj
-function processResponse(response, ele) {
+
+
+// process response with cheerio and work on the data 
+function processResponse(response, category) {
     const currentTime = runDate.getTime();
+    const html = response.data;
+    const $ = load(html);
     const reID = /\d+$/;
-    const $ = cheerio.load(response.data);
-    if($('.next').length) {
+    // var  nextpagetest = $('.pagination > [data-event-label="next page click"]');
+    // check if next page exists
+    if($('.pagination > [data-event-label="next page click"]').length) {
         morePages = true;
     } else {
         morePages = false;
     }
     let scrapedPage = $('.product');
-    scrapedPage.each(function(i, el) {
-        //check if there is a next page
-        let scrapedUrl = $(this).find('.productnamecontainer a').attr('href');
-        let itemLink= nabavaUrl + scrapedUrl;
+    // cl(html);
+    // cl(scrapedPage);
+    scrapedPage.each((index, element) => {
+        let scrapedUrl = $(element).find('.product__link').attr('href');
+        let itemLink = nabavaUrl + scrapedUrl;
         let itemID = reID.exec(scrapedUrl)[0];
-        let itemInfo = $(this).find('.productnamecontainer a').attr('title');
-        let scrapedPrice = $(this).find('.low').text();
-        let itemPrice = parseInt(scrapedPrice.replace(/\D/g, '')); 
+        let itemInfo = $(element).find('.product__link').attr('title');
+        let scrapedPrice = $(element).find('.product__price > div > div:first-child').text().trim();
+        let itemPrice = parseFloat(scrapedPrice.replace(/[^\d.,]/g, '').replace(',', '.'));
         //if itemID not found in collection
-        if (itemID in dataCollection[ele] && dataCollection[ele][itemID]["itemInfo"] == itemInfo) {
+        // let testdatacategory = Object.hasOwn(dataCollection[category], itemID); 
+        if (itemID in dataCollection[category] && dataCollection[category][itemID]["itemInfo"] == itemInfo) {
+        // if (Object.hasOwn(dataCollection[category], itemID) && dataCollection[category][itemID]["itemInfo"] == itemInfo) {
             //confirm that description is same
             updatedItemsCount++
-            let currentObject = dataCollection[ele][itemID];
-            let priceDiff = Math.abs(currentObject["itemPrice"]-itemPrice);
-            currentObject["timeLastSeen"] = currentTime;
+            let currentObject = dataCollection[category][itemID];
+            let priceDiff = Math.abs(currentObject["itemPrice"] - itemPrice);
             //update price, pricechange and changedate if price is different
             if (priceDiff >= 1) {
-                let startPrice = currentObject["itemStartPrice"];
+                let basePrice = currentObject["itemBasePrice"];
                 let prevPrice = currentObject["itemPrice"];
                 currentObject["itemPrice"] = itemPrice;
-                let totalPriceDiff = itemPrice - startPrice; 
+                let totalPriceDiff = itemPrice - basePrice; 
                 let lastPriceDiff = itemPrice - prevPrice;
-                let totalPercentChange = (totalPriceDiff / startPrice) * 100;
+                let totalPercentChange = (totalPriceDiff / basePrice) * 100;
                 let lastPercentChange = (lastPriceDiff / prevPrice) * 100;
                 if (Math.sign(totalPercentChange) == -1) {
                     currentObject["percentChange"] = Math.floor(totalPercentChange); 
@@ -127,58 +147,79 @@ function processResponse(response, ele) {
                 currentObject["priceChange"] = totalPriceDiff;
                 currentObject["dateUpdated"] = ddmmyyyy;
             }
-            //set base price (itemStartPrice) to current price (itemPrice) if the price didn't change significantly in the last 30 days
+
+            //set base price (itemBasePrice) to current price (itemPrice) if the price didn't change significantly in the last 30 days
             let tempTime = currentObject["timeUpdated"];
-            let timeSinceUpdate = (currentTime-tempTime)/(1000*3600*24);
+            let timeSinceUpdate = (currentTime - tempTime) / (1000 * 3600 * 24);
             if ( timeSinceUpdate >= 30) {
                 currentObject["percentChange"] = 0;
                 currentObject["priceChange"] = 0;
-                currentObject["itemStartPrice"] = itemPrice;
+                currentObject["itemBasePrice"] = itemPrice;
                 basePriceUpdated++;
             }
+
+            //calculate and set itemAvgPrice
+            let timesScraped = currentObject["timesScraped"];
+            let avgPrice = currentObject["itemAvgPrice"];
+            let newAvgPrice = (avgPrice * timesScraped + itemPrice) / (timesScraped + 1);
+            newAvgPrice = parseFloat(newAvgPrice.toFixed(2));
+            currentObject["itemAvgPrice"] = newAvgPrice;
+
+            //update utility props
+            currentObject["timesScraped"] += 1;
+            currentObject["timeLastSeen"] = currentTime;
         } else {
             //make new object with that itemID and store in collection
-            newItemsCount++
-            dataCollection[ele][itemID] = {};
-            dataCollection[ele][itemID]["itemID"] = itemID;
-            dataCollection[ele][itemID]["itemInfo"] = itemInfo;
-            dataCollection[ele][itemID]["itemPrice"] = itemPrice;
-            dataCollection[ele][itemID]["itemStartPrice"] = itemPrice;
-            dataCollection[ele][itemID]["percentChange"] = 0;
-            dataCollection[ele][itemID]["priceChange"] = 0;
-            dataCollection[ele][itemID]["timeAdded"] = currentTime;
-            dataCollection[ele][itemID]["timeUpdated"] = currentTime;
-            dataCollection[ele][itemID]["timeLastSeen"] = currentTime;
-            dataCollection[ele][itemID]["dateAdded"] = ddmmyyyy;
-            dataCollection[ele][itemID]["dateUpdated"] = ddmmyyyy;
-            dataCollection[ele][itemID]["itemLink"] = itemLink;
+            //create new item
+            let newItem = {
+                "itemID": itemID,
+                "itemInfo": itemInfo,
+                "itemPrice": itemPrice,
+                "itemBasePrice": itemPrice,
+                "itemAvgPrice": itemPrice,
+                "timesScraped": 1,
+                "percentChange": 0,
+                "priceChange": 0,
+                "timeAdded": currentTime,
+                "timeUpdated": currentTime,
+                "timeLastSeen": currentTime,
+                "dateAdded": ddmmyyyy,
+                "dateUpdated": ddmmyyyy,
+                "itemLink": itemLink,
+            }
+            dataCollection[category][itemID] = newItem;
+            newItemsCount++;
         }
 
-    })
+        // console.log('URL:', itemLink);
+        // console.log('ID:', itemID);
+        // console.log('Title:', itemInfo);
+        // console.log('Price:', itemPrice);
+        // console.log('---');
+    });
 }
 
-
 //init function
-async function processArray(arr) {
+async function processCategories(categoriesArray) {
     const startTime = new Date();
-    var page = 0;
-    for (let i = 0; i<arr.length; i++) {
-        let url = nabavaUrl + "/" + arr[i];
-        if (!(arr[i] in dataCollection)) {
-            dataCollection[arr[i]] = {}
+    var page = 1;
+    for (let i = 0; i<categoriesArray.length; i++) {
+        let url = nabavaUrl + "/" + categoriesArray[i];
+        if (!(categoriesArray[i] in dataCollection)) {
+            dataCollection[categoriesArray[i]] = {}
         }
         var startItemTime = new Date();
         do {
+            await getPage(url, page).then(response => processResponse(response, categoriesArray[i])).catch(err => console.error(err));
             page++
-            await getPage(url, page).then(response => processResponse(response, arr[i])).catch(err => console.error(err));
         } while (morePages);
-        page = 0;
+        page = 1;
         var endItemTime = new Date();
-        cl(`All pages from ${arr[i]} completed in ` + (endItemTime.getTime() - startItemTime.getTime()) + `ms \n ${updatedItemsCount} updated items \n ${newItemsCount} new items added \n ${basePriceUpdated} base prices changed`);
+        cl(`All pages from ${categoriesArray[i]} completed in ` + (endItemTime.getTime() - startItemTime.getTime()) + `ms \n ${updatedItemsCount} updated items \n ${newItemsCount} new items added \n ${basePriceUpdated} base prices changed`);
         updatedItemsCount = 0, 
         newItemsCount = 0,
         basePriceUpdated = 0;
-        formatForTabulator(dataCollection[arr[i]], arr[i])
+        formatForTabulator(dataCollection[categoriesArray[i]], categoriesArray[i])
     }
     const endTime = new Date();
     cl("All jobs completed in " + (endTime.getTime() - startTime.getTime()) + "ms. \n");
@@ -198,3 +239,5 @@ function formatForTabulator(obj, ele) {
     let outputJSON = JSON.stringify(temparr);
     fsp.writeFile(outputPath+ele+".json", outputJSON).then(cl(ele + " tabulator file written. \n")).catch(err => (cl(err)));
 }
+
+// getPage(URL, 1).then(response => processResponse(response, "misevi")).catch(err => console.error(err));
