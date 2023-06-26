@@ -17,7 +17,7 @@ const outputPath = "C:/Users/zpectral/Documents/dev/nabava-popusti/data/";
 
 //category name has to be the same as on nabava.net
 // const dataCategories = ["monitori", "misevi", "procesori", "graficke-kartice", "gaming-slusalice", "tipkovnice", "ssd-disk", "cvrsti-diskovi", "sisaci-i-trimeri"];
-const dataCategories = ["procesori", "gaming-misevi", "graficke-kartice", "gaming-slusalice", "tipkovnice"];
+const dataCategories = ["procesori", "gaming-misevi", "graficke-kartice", "gaming-slusalice", "tipkovnice", "monitori"];
 // const dataCategories = ["procesori"];
 var dataCollection = {};
 
