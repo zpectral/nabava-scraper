@@ -118,7 +118,7 @@ function processResponse(response, category) {
         let itemID = reID.exec(scrapedUrl)[0];
         let itemInfo = $(element).find('.product__link').attr('title');
         let scrapedPrice = $(element).find('.product__price > div > div:first-child').text().trim();
-        let itemPrice = parseFloat(scrapedPrice.replace(/[^\d.,]/g, '').replace(',', '.'));
+        let itemPrice = parseFloat(scrapedPrice.replace(/[^\d,]/g, '').replace(',', '.'));
         //if itemID not found in collection
         // let testdatacategory = Object.hasOwn(dataCollection[category], itemID); 
         if (itemID in dataCollection[category] && dataCollection[category][itemID]["itemInfo"] == itemInfo) {
