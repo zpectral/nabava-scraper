@@ -126,11 +126,11 @@ function processResponse(response, category) {
             //confirm that description is same
             updatedItemsCount++
             let currentObject = dataCollection[category][itemID];
+            let prevPrice = currentObject["itemPrice"];
             let priceDiff = Math.abs(currentObject["itemPrice"] - itemPrice);
             //update price, pricechange and changedate if price is different
             if (priceDiff >= 1) {
                 let basePrice = currentObject["itemBasePrice"];
-                let prevPrice = currentObject["itemPrice"];
                 currentObject["itemPrice"] = itemPrice;
                 let totalPriceDiff = itemPrice - basePrice; 
                 let lastPriceDiff = itemPrice - prevPrice;
@@ -148,16 +148,6 @@ function processResponse(response, category) {
                 currentObject["dateUpdated"] = ddmmyyyy;
             }
 
-            //set base price (itemBasePrice) to current price (itemPrice) if the price didn't change significantly in the last 30 days
-            let tempTime = currentObject["timeUpdated"];
-            let timeSinceUpdate = (currentTime - tempTime) / (1000 * 3600 * 24);
-            if ( timeSinceUpdate >= 30) {
-                currentObject["percentChange"] = 0;
-                currentObject["priceChange"] = 0;
-                currentObject["itemBasePrice"] = itemPrice;
-                basePriceUpdated++;
-            }
-
             //calculate and set itemAvgPrice
             let timesScraped = currentObject["timesScraped"];
             let avgPrice = currentObject["itemAvgPrice"];
@@ -165,12 +155,25 @@ function processResponse(response, category) {
             newAvgPrice = parseFloat(newAvgPrice.toFixed(2));
             currentObject["itemAvgPrice"] = newAvgPrice;
 
+            //set base price (itemBasePrice) to current price (itemPrice) if the price didn't change significantly in the last 30 days
+            let tempTime = currentObject["timeUpdated"];
+            let timeSinceUpdate = (currentTime - tempTime) / (1000 * 3600 * 24);
+            if ( timeSinceUpdate >= 30 || itemPrice > basePrice) {
+                // currentObject["percentChange"] = 0;
+                // currentObject["priceChange"] = 0;
+                if (itemPrice > 2 * avgPrice) {
+                    currentObject["itemBasePrice"] = avgPrice;
+                } else {
+                    currentObject["itemBasePrice"] = itemPrice;
+                }
+                basePriceUpdated++;
+            }
+
             //update utility props
             currentObject["timesScraped"] += 1;
             currentObject["timeLastSeen"] = currentTime;
         } else {
-            //make new object with that itemID and store in collection
-            //create new item
+            //make new object with that and store it under that itemID 
             let newItem = {
                 "itemID": itemID,
                 "itemInfo": itemInfo,
