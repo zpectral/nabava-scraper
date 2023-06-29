@@ -91,6 +91,7 @@ async function getPage(url, page) {
         // cl("success");
         return response;
     } catch (error) {
+        cl(`No response from ${url} at page ${page}]`)
         console.error(error);
     }
 }
@@ -127,10 +128,10 @@ function processResponse(response, category) {
             updatedItemsCount++
             let currentObject = dataCollection[category][itemID];
             let prevPrice = currentObject["itemPrice"];
+            let basePrice = currentObject["itemBasePrice"];
             let priceDiff = Math.abs(currentObject["itemPrice"] - itemPrice);
             //update price, pricechange and changedate if price is different
             if (priceDiff >= 1) {
-                let basePrice = currentObject["itemBasePrice"];
                 currentObject["itemPrice"] = itemPrice;
                 let totalPriceDiff = itemPrice - basePrice; 
                 let lastPriceDiff = itemPrice - prevPrice;
