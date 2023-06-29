@@ -162,8 +162,8 @@ function processResponse(response, category) {
             if ( timeSinceUpdate >= 30 || itemPrice > basePrice) {
                 // currentObject["percentChange"] = 0;
                 // currentObject["priceChange"] = 0;
-                if (itemPrice > 2 * avgPrice) {
-                    currentObject["itemBasePrice"] = avgPrice;
+                if (itemPrice > 1.5 * avgPrice) {
+                    currentObject["itemBasePrice"] = 1.25 * avgPrice;
                 } else {
                     currentObject["itemBasePrice"] = itemPrice;
                 }
