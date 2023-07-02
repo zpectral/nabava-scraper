@@ -129,9 +129,9 @@ function processResponse(response, category) {
             let currentObject = dataCollection[category][itemID];
             let prevPrice = currentObject["itemPrice"];
             let basePrice = currentObject["itemBasePrice"];
-            let priceDiff = Math.abs(currentObject["itemPrice"] - itemPrice);
+            // let priceDiff = Math.abs(currentObject["itemPrice"] - itemPrice);
             //update price, pricechange and changedate if price is different
-            if (priceDiff >= 1) {
+            if (prevPrice != itemPrice) {
                 currentObject["itemPrice"] = itemPrice;
                 let totalPriceDiff = itemPrice - basePrice; 
                 let lastPriceDiff = itemPrice - prevPrice;
