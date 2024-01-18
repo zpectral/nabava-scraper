@@ -76,7 +76,7 @@ var basePriceUpdated = 0;
 let params = new URLSearchParams();
 params.append('s', 1);
 params.append('tpkp', 1);
-params.append('kPostavke.pregledSortKategorije', 2);
+params.append('kPostavke.pregledSortTrazilica', 2);
 params.append('kPostavke.pregledBrojProizvoda', 300);
 params.append('r', 1);
 params.append('r', 2);
