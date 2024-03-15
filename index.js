@@ -159,10 +159,14 @@ function processResponse(response, category) {
             //set base price (itemBasePrice) to current price (itemPrice) if the price didn't change significantly in the last 30 days
             let tempTime = currentObject["timeUpdated"];
             let timeSinceUpdate = (currentTime - tempTime) / (1000 * 3600 * 24);
-            if ( itemPrice > (2 * avgPrice) || timeSinceUpdate >= 30 ) {
+            if ( timeSinceUpdate >= 20 ) {
+                currentObject["itemBasePrice"] = itemPrice;
+                basePriceUpdated++;
+            }
+            else if ( itemPrice > (2 * avgPrice)  ) {
                 // currentObject["percentChange"] = 0;
                 // currentObject["priceChange"] = 0;
-                currentObject["itemBasePrice"] = itemPrice;
+                currentObject["itemBasePrice"] = 1.25 * avgPrice;
                 basePriceUpdated++;
             }
 
