@@ -12,7 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "axios": "^1.4.0",
+    "axios": ">=0.32.0",
     "cheerio": "^1.0.0-rc.12",
     "esm": "^3.2.25",
     "nmp": "^1.0.3",
