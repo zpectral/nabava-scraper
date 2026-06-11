@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "module": "main.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -11,8 +12,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.21.1",
-    "cheerio": "^1.0.0-rc.5",
-    "esm": "^3.2.25"
+    "axios": "^1.4.0",
+    "cheerio": "^1.0.0-rc.12",
+    "esm": "^3.2.25",
+    "nmp": "^1.0.3",
+    "npm-check-updates": "^16.10.13"
   }
 }

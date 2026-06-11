@@ -1,12 +1,12 @@
-const fs = require('fs');
-const fsp = require('fs').promises;
+import { createWriteStream } from 'fs';
+import { promises as fsp } from 'fs';
 
 const dataCollectionPath = "C:/Users/zpectral/Documents/dev/nabava-scraper/";
 var dataCollection = {};
 
 
 //cl to file
-const logFile = fs.createWriteStream("scraper.log", {flags:'a'});
+const logFile = createWriteStream("scraper.log", {flags:'a'});
 function cl(txt) {
     logFile.write(txt + '\n');
 }
